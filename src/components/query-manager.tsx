@@ -90,8 +90,7 @@ export function QueryManager({
       onQuerySelect(newQuery);
     }
 
-    setFormData({ name: '', query: '', validationFunction: '' });
-    setValidationError(null);
+    resetFormData();
     setIsAddDialogOpen(false);
   };
 
@@ -126,8 +125,7 @@ export function QueryManager({
     }
 
     setEditingQuery(null);
-    setFormData({ name: '', query: '', validationFunction: '' });
-    setValidationError(null);
+    resetFormData();
   };
 
   const handleDeleteQuery = (query: Query) => {
@@ -138,6 +136,15 @@ export function QueryManager({
     if (selectedQuery?.id === query.id) {
       onQuerySelect(null);
     }
+  };
+
+  const resetFormData = () => {
+    setFormData({
+      name: '',
+      query: '',
+      validationFunction: '',
+    });
+    setValidationError(null);
   };
 
   const openEditDialog = (query: Query) => {
@@ -189,14 +196,22 @@ export function QueryManager({
             Manage GraphQL queries for your subgraphs
           </p>
         </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <Dialog
+          open={isAddDialogOpen}
+          onOpenChange={(open) => {
+            setIsAddDialogOpen(open);
+            if (open) {
+              resetFormData();
+            }
+          }}
+        >
           <DialogTrigger asChild>
             <Button disabled={!selectedSubgraph}>
               <Plus className="h-4 w-4 mr-2" />
               Add Query
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="w-full sm:max-w-5xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add New Query</DialogTitle>
               <DialogDescription>
@@ -302,7 +317,12 @@ export function QueryManager({
             <p className="text-muted-foreground text-center mb-4">
               Add your first query for {selectedSubgraph.name} to get started.
             </p>
-            <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Button
+              onClick={() => {
+                resetFormData();
+                setIsAddDialogOpen(true);
+              }}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add Query
             </Button>
@@ -415,7 +435,15 @@ export function QueryManager({
       )}
 
       {/* Edit Dialog */}
-      <Dialog open={!!editingQuery} onOpenChange={() => setEditingQuery(null)}>
+      <Dialog
+        open={!!editingQuery}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingQuery(null);
+            resetFormData();
+          }
+        }}
+      >
         <DialogContent className="w-full sm:max-w-5xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Query</DialogTitle>
