@@ -1,103 +1,254 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState, useEffect } from 'react';
+import { SubgraphManager } from '@/components/subgraph-manager';
+import { QueryManager } from '@/components/query-manager';
+import { QueryExecutor } from '@/components/query-executor';
+import { QueryHistory } from '@/components/query-history';
+import { ThemeToggle } from '@/components/theme-toggle';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Trash2, Database, Code, History, Settings } from 'lucide-react';
+import { clearAllData } from '@/lib/storage';
+import { Subgraph, Query } from '@/lib/types';
+
+export default function HomePage() {
+  const [subgraphs, setSubgraphs] = useState<Subgraph[]>([]);
+  const [queries, setQueries] = useState<Query[]>([]);
+  const [selectedSubgraph, setSelectedSubgraph] = useState<Subgraph | null>(
+    null
+  );
+  const [selectedQuery, setSelectedQuery] = useState<Query | null>(null);
+
+  // Load data from localStorage on mount
+  useEffect(() => {
+    const loadData = () => {
+      const storedSubgraphs = JSON.parse(
+        localStorage.getItem('subgraph-debugger-subgraphs') || '[]'
+      );
+      const storedQueries = JSON.parse(
+        localStorage.getItem('subgraph-debugger-queries') || '[]'
+      );
+
+      setSubgraphs(storedSubgraphs);
+      setQueries(storedQueries);
+
+      // Set first subgraph as selected if available
+      if (storedSubgraphs.length > 0 && !selectedSubgraph) {
+        setSelectedSubgraph(storedSubgraphs[0]);
+      }
+    };
+
+    loadData();
+  }, [selectedSubgraph]);
+
+  const handleSubgraphsChange = (newSubgraphs: Subgraph[]) => {
+    setSubgraphs(newSubgraphs);
+    localStorage.setItem(
+      'subgraph-debugger-subgraphs',
+      JSON.stringify(newSubgraphs)
+    );
+
+    // Update selected subgraph if it was deleted
+    if (
+      selectedSubgraph &&
+      !newSubgraphs.find((s) => s.id === selectedSubgraph.id)
+    ) {
+      setSelectedSubgraph(newSubgraphs[0] || null);
+    }
+  };
+
+  const handleQueriesChange = (newQueries: Query[]) => {
+    setQueries(newQueries);
+    localStorage.setItem(
+      'subgraph-debugger-queries',
+      JSON.stringify(newQueries)
+    );
+
+    // Update selected query if it was deleted
+    if (selectedQuery && !newQueries.find((q) => q.id === selectedQuery.id)) {
+      setSelectedQuery(null);
+    }
+  };
+
+  const handleClearAllData = () => {
+    clearAllData();
+    setSubgraphs([]);
+    setQueries([]);
+    setSelectedSubgraph(null);
+    setSelectedQuery(null);
+  };
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Database className="h-6 w-6" />
+            <h1 className="text-2xl font-bold">Subgraph Debugger</h1>
+          </div>
+          <div className="flex items-center space-x-2">
+            <ThemeToggle />
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Clear All Data</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete all subgraphs, queries, and
+                    history stored in your browser. This action cannot be
+                    undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleClearAllData}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Clear All Data
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-6">
+        <Tabs defaultValue="subgraphs" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger
+              value="subgraphs"
+              className="flex items-center space-x-2"
+            >
+              <Database className="h-4 w-4" />
+              <span>Subgraphs</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="queries"
+              className="flex items-center space-x-2"
+            >
+              <Code className="h-4 w-4" />
+              <span>Queries</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="execute"
+              className="flex items-center space-x-2"
+            >
+              <Settings className="h-4 w-4" />
+              <span>Execute</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="history"
+              className="flex items-center space-x-2"
+            >
+              <History className="h-4 w-4" />
+              <span>History</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="subgraphs" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Subgraph Management</CardTitle>
+                <CardDescription>
+                  Add, edit, and manage your subgraph configurations. API keys
+                  are stored in environment variables.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SubgraphManager
+                  subgraphs={subgraphs}
+                  onSubgraphsChange={handleSubgraphsChange}
+                  selectedSubgraph={selectedSubgraph}
+                  onSubgraphSelect={setSelectedSubgraph}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="queries" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Query Management</CardTitle>
+                <CardDescription>
+                  Create and manage GraphQL queries for your subgraphs.
+                  Parameters are automatically extracted from your queries.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <QueryManager
+                  queries={queries}
+                  onQueriesChange={handleQueriesChange}
+                  selectedQuery={selectedQuery}
+                  onQuerySelect={setSelectedQuery}
+                  selectedSubgraph={selectedSubgraph}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="execute" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Query Execution</CardTitle>
+                <CardDescription>
+                  Execute queries against your subgraphs and view results with
+                  validation.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <QueryExecutor
+                  selectedSubgraph={selectedSubgraph}
+                  selectedQuery={selectedQuery}
+                  queries={queries}
+                  onQuerySelect={setSelectedQuery}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="history" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Execution History</CardTitle>
+                <CardDescription>
+                  View and manage your query execution history.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <QueryHistory />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
 }
