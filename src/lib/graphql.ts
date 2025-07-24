@@ -1,4 +1,3 @@
-import { request } from 'graphql-request';
 import { Query, QueryParameter, ValidationResult } from './types';
 
 export interface ExecuteQueryOptions {
@@ -18,8 +17,6 @@ export const executeQuery = async (
   options: ExecuteQueryOptions
 ): Promise<ExecuteQueryResult> => {
   const { query, parameters, subgraphUrl, apiKey } = options;
-
-  const startTime = Date.now();
 
   try {
     // Replace parameters in the query
@@ -44,22 +41,40 @@ export const executeQuery = async (
       processedQuery = processedQuery.replace(regex, processedValue);
     });
 
-    const headers: Record<string, string> = {};
-    if (apiKey) {
-      headers.Authorization = `Bearer ${apiKey}`;
+    // Use the API route instead of direct GraphQL request
+    const response = await fetch('/api/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: processedQuery,
+        variables: {},
+        subgraphUrl,
+        apiKeyEnvVar: apiKey, // Pass the environment variable name
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      return {
+        data: {},
+        error: result.error || 'Failed to execute query',
+        executionTime: 0,
+      };
     }
 
-    const data = await request(subgraphUrl, processedQuery, {}, headers);
-
     return {
-      data: data as Record<string, unknown>,
-      executionTime: Date.now() - startTime,
+      data: result.data || {},
+      error: result.error,
+      executionTime: result.executionTime || 0,
     };
   } catch (error) {
     return {
       data: {},
       error: error instanceof Error ? error.message : 'Unknown error occurred',
-      executionTime: Date.now() - startTime,
+      executionTime: 0,
     };
   }
 };

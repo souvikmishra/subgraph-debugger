@@ -65,14 +65,11 @@ export function QueryExecutor({
     setValidationResult(null);
 
     try {
-      // Get API key from environment variable
-      const apiKey = process.env[selectedSubgraph.apiKeyEnvVar];
-
       const queryResult = await executeQuery({
         query: selectedQuery,
         parameters,
         subgraphUrl: selectedSubgraph.url,
-        apiKey,
+        apiKey: selectedSubgraph.apiKeyEnvVar, // Pass the environment variable name
       });
 
       const resultData: QueryResult = {
