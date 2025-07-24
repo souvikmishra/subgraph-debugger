@@ -175,13 +175,6 @@ export default function HomePage() {
 
           <TabsContent value="subgraphs" className="space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle>Subgraph Management</CardTitle>
-                <CardDescription>
-                  Add, edit, and manage your subgraph configurations. API keys
-                  are stored in environment variables.
-                </CardDescription>
-              </CardHeader>
               <CardContent>
                 <SubgraphManager
                   subgraphs={subgraphs}
@@ -195,13 +188,6 @@ export default function HomePage() {
 
           <TabsContent value="queries" className="space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle>Query Management</CardTitle>
-                <CardDescription>
-                  Create and manage GraphQL queries for your subgraphs.
-                  Parameters are automatically extracted from your queries.
-                </CardDescription>
-              </CardHeader>
               <CardContent>
                 <QueryManager
                   queries={queries}
@@ -236,12 +222,6 @@ export default function HomePage() {
 
           <TabsContent value="history" className="space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle>Execution History</CardTitle>
-                <CardDescription>
-                  View and manage your query execution history.
-                </CardDescription>
-              </CardHeader>
               <CardContent>
                 <QueryHistory />
               </CardContent>

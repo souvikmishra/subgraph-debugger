@@ -307,8 +307,8 @@ export function QueryExecutor({
             <div className="flex items-center justify-between">
               <CardTitle>Results</CardTitle>
               <div className="flex items-center space-x-2">
-                <Badge variant={result.error ? 'destructive' : 'default'}>
-                  {result.error ? 'Error' : 'Success'}
+                <Badge variant={result.error ? 'destructive' : 'success'}>
+                  {result.error ? 'HTTP Error' : '200 OK'}
                 </Badge>
                 <span className="text-sm text-muted-foreground">
                   {result.executionTime}ms
@@ -317,12 +317,12 @@ export function QueryExecutor({
             </div>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="data" className="w-full">
+            <Tabs defaultValue="validation" className="w-full">
               <TabsList>
-                <TabsTrigger value="data">Data</TabsTrigger>
                 {validationResult && (
                   <TabsTrigger value="validation">Validation</TabsTrigger>
                 )}
+                <TabsTrigger value="data">Data</TabsTrigger>
               </TabsList>
 
               <TabsContent value="data" className="space-y-4">

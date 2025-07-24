@@ -195,21 +195,21 @@ export function QueryHistory() {
                 </div>
                 <div className="flex items-center space-x-2">
                   <Badge
-                    variant={entry.result.error ? 'destructive' : 'default'}
+                    variant={entry.result.error ? 'destructive' : 'success'}
                   >
-                    {entry.result.error ? 'Error' : 'Success'}
+                    {entry.result.error ? 'HTTP Error' : '200 OK'}
                   </Badge>
                   {entry.result.validationResult && (
                     <Badge
                       variant={
                         entry.result.validationResult.passed
-                          ? 'default'
+                          ? 'success'
                           : 'destructive'
                       }
                     >
                       {entry.result.validationResult.passed
                         ? 'Validated'
-                        : 'Failed'}
+                        : 'Validation Failed'}
                     </Badge>
                   )}
                   <span className="text-sm text-muted-foreground">
