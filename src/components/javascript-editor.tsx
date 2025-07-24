@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import Editor from '@monaco-editor/react';
 
@@ -15,7 +15,7 @@ export function JavaScriptEditor({
   onChange,
   className = '',
 }: JavaScriptEditorProps) {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const editorRef = useRef<any>(null);
 
@@ -28,6 +28,25 @@ export function JavaScriptEditor({
     onChange(value || '');
   };
 
+  // Update editor theme when theme changes
+  useEffect(() => {
+    if (editorRef.current) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const monaco = (window as any).monaco;
+      if (monaco) {
+        const newTheme = resolvedTheme === 'dark' ? 'vs-dark' : 'vs-light';
+        monaco.editor.setTheme(newTheme);
+      }
+    }
+  }, [resolvedTheme]);
+
+  const editorTheme =
+    resolvedTheme === 'dark'
+      ? 'vs-dark'
+      : resolvedTheme === 'light'
+      ? 'vs-light'
+      : 'vs-dark';
+
   return (
     <div className={className}>
       <Editor
@@ -36,6 +55,7 @@ export function JavaScriptEditor({
         value={value}
         onChange={handleEditorChange}
         onMount={handleEditorDidMount}
+        theme={editorTheme}
         options={{
           minimap: { enabled: false },
           scrollBeyondLastLine: false,
@@ -48,7 +68,6 @@ export function JavaScriptEditor({
           },
           automaticLayout: true,
           wordWrap: 'on',
-          theme: theme === 'dark' ? 'vs-dark' : 'vs-light',
         }}
       />
     </div>
