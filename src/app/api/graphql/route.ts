@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
 
     if (!query || !subgraphUrl) {
       return NextResponse.json(
-        { error: 'Missing required fields: query and subgraphUrl' },
+        { error: 'Missing required fields: query and subgraphUrl.' },
         { status: 400 }
       );
     }
